@@ -22,7 +22,9 @@ columns = [
            # pid values used by tasks
            "pidRoll","pidPitch","pidYaw","pidThrust","pidHover",
            # constants.....
-           "HOVER_MINIMAL_HEIGHT", "HOVER_MIN_DISTANCE", "HOVER_MAX_DISTANCE" 
+           "HOVER_MINIMAL_HEIGHT", "HOVER_MIN_DISTANCE", "HOVER_MAX_DISTANCE",
+           # CRC 16Bit, PODRacer send 8Bytes 0000+4BytesCRC
+           "CRC"
            ];
 
 fname = "podrdata{TS}.csv"

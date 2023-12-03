@@ -60,4 +60,5 @@ layout = html.Div(
     Input(ThemeSwitchAIO.ids.switch("theme"), "value"),    
 )
 def update_live_main(graph, smoothing_value, hover_mode, xaxis_type, yaxis_type, tasks, channels, toggle):
+
     return fig
