@@ -75,7 +75,7 @@ static_header_row = dbc.Row(
     [
         dbc.Col(html.H2("Logfile analysis", style={'color':'darkcyan'}), width=6),
         dbc.Col(upload_component, width=4),
-        dbc.Col(html.Div(children="", id="div-uploaded-file", style={'border-top-width':'10px' }), width=2)
+        dbc.Col(html.Div(children="", id="div-uploaded-file", style={'borderTopWidth':'10px' }), width=2)
     ]
 )
 
@@ -84,7 +84,6 @@ livedata_header_row = dbc.Row(
     [
         dbc.Col(html.H2("Live data analysis", style={'color':'darkcyan'}), width=6),
         dbc.Col(btn_live_config, width=4),
-        #dbc.Col(html.Div(children="", id="div-uploaded-file", style={'border-top-width':'10px' }), width=2)
         dbc.Col(ld_serial_running, width=2)
     ]   
 )
@@ -122,6 +121,7 @@ live_config_layout = html.Div(
                 )    
             ]
         ),
+        html.Hr(),
         dbc.Row( 
             [
                 dbc.Label("Update interval in ms"),
@@ -141,10 +141,10 @@ modal_live_config = dbc.Modal(
         dbc.ModalFooter(
             [
                 dbc.Button(
-                    "Close", id="close-live", className="ms-auto", n_clicks=0
+                    "Close", id="btn-close-live", className="ms-auto", n_clicks=0
                 ),
                 dbc.Button(
-                    "Run", id="run-live", color="success", className="ms-auto", n_clicks=0
+                    "Run", id="btn-run-live", color="success", className="ms-auto", n_clicks=0
                 )
             ]    
         ),
@@ -152,7 +152,58 @@ modal_live_config = dbc.Modal(
     id="modal-live-config",
     size="lg",
     is_open=False,
+    backdrop=False
 )
+
+message_content = html.P(
+    [
+        html.P(html.P([html.I(className="bi bi-x-octagon-fill me-2"), html.P(id="message-err", style={'color': 'red'})])),
+        html.P(html.P([html.I(className="bi bi-exclamation-triangle-fill me-2"), html.P(id="message-warn", style={'color': 'orange'})])),
+        html.P(html.P([html.I(className="bi bi-info-circle-fill me-2"), html.P(id="message-info", style={'color': 'white'})])),
+        html.P(html.P([html.I(className="bi bi-check-circle-fill me-2"), html.P(id="message-success", style={'color': 'green'})])),
+    ],
+    id="message-content"
+)
+
+alert_success = dbc.Alert(
+    [
+        html.P("",id="msg-alert-success"),
+    ],
+    id="alert-success",
+    color="success",
+    is_open=False,
+    dismissable=True
+)
+
+alert_info = dbc.Alert(
+    [
+        html.P(id="msg-alert-info"),
+    ],
+    id="alert-info",
+    color="primary",
+    duration=1000,
+    is_open=False
+)
+
+alert_warn = dbc.Alert(
+    [
+        html.P("",id="msg-alert-warn"),
+    ],
+    id="alert-warn",
+    color="warning",
+    is_open=False,
+    dismissable=True
+)
+
+alert_error = dbc.Alert(
+    [
+        html.P(id="msg-alert-error"),
+    ],
+    id="alert-error",
+    color="danger",
+    is_open=False,
+    dismissable=True
+) 
 
 #------------------------------------------------------------------------------------------------------
 # RadioItems components
@@ -363,4 +414,15 @@ offcanvas2 = dbc.Offcanvas(
     id="offcanvas-graph2-content",
     scrollable=True,
     is_open=False
+)
+
+#------------------------------------------------------------------------------------------------------
+# Graph-Tooltip
+#------------------------------------------------------------------------------------------------------
+tt_data_point = dcc.Tooltip(
+    id="tt-data-point"
+)
+
+tt_data_point_sub = dcc.Tooltip(
+    id="tt-data-point-sub"
 )

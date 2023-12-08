@@ -1,6 +1,6 @@
 
 # Import packages
-from dash                   import Dash, html, dash, page_container, page_registry, dash_table, dcc, callback, Output, Input, ctx, State
+from dash                   import Dash, html, dash, page_container, page_registry, dash_table, dcc, callback, Output, Input, ctx, State, no_update
 from flask                  import Flask
 import plotly.express       as px
 import plotly.graph_objects as go
@@ -9,7 +9,8 @@ import time
 import argparse
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import ThemeSwitchAIO
-from modules.datasets import ImportHelpData
+from modules.datasets import ImportHelpData, help_df
+from modules.graph_utils import createTooltip
 
 server = Flask(__name__)
 
@@ -81,7 +82,7 @@ navbar = dbc.NavbarSimple(
 app.layout = dbc.Container(
     [ 
         navbar, 
-        theme_toggle,
+        dbc.Row([theme_toggle]),
         dash.page_container
      ],
     fluid=True,
@@ -113,9 +114,82 @@ def toggle_offcanvas2(n1,is_open):
     return is_open
 
 
+@app.callback(
+    Output("tt-data-point", "show"),
+    Output("tt-data-point", "bbox"),
+    Output("tt-data-point", "children"),
+    Input("fig-static-main", "hoverData"),
+    Input("fig-static-main", "figure")
+)
+def display_hover1(hoverData, fig):
+    if hoverData is None:
+        return False, no_update, no_update
+
+    # demo only shows the first point, but other points may also be available
+    tt, bbox = createTooltip(help_df, fig, hoverData)
+    return True, bbox, tt
+
+@app.callback(
+    Output("tt-data-point-sub", "show"),
+    Output("tt-data-point-sub", "bbox"),
+    Output("tt-data-point-sub", "children"),
+    Input("fig-static-sub1", "hoverData"),
+    Input("fig-static-sub1", "figure")
+)
+def display_hover2(hoverData, fig):
+    if hoverData is None:
+        return False, no_update, no_update
+
+    # demo only shows the first point, but other points may also be available
+    tt, bbox = createTooltip(help_df, fig, hoverData)
+    return True, bbox, tt
+
+
+
+
+"""
+
+    pt = hover_data_static_main["points"][0]
+    curves = fig["data"]
+    bbox = pt["bbox"]
+    curvID = pt["curveNumber"]
+    ts = f"{pt['x']}ms"
+    dp = f"{pt['y']}"
+
+    grouping = curves[curvID]['name'].split('|')
+    df_row = help_df.query(f"GROUPING=='{grouping[0]}' and DATA=='{grouping[1]}'")
+    data = f"at '{ts}' with value '{dp}'"
+    name = df_row['NAME'].iloc[0]
+    range = df_row['RANGE'].iloc[0]
+    desc = df_row['DESC'].iloc[0]
+    if len(desc) > 300:
+        desc = desc[:100] + '...'
+
+    children = [
+        html.Div([
+            html.H5(f"{name}", style={"color": "darkblue", "overflow-wrap": "break-word"}),
+            html.Hr(),
+            html.P([
+                "at ",
+                html.B(ts, style={"color": "darkblue"}),
+                " with value ",
+                html.B(dp, style={"color": "darkblue"})
+            ]),
+            html.Hr(),
+            html.P([
+                "typical range ",
+                html.B(range, style={"color": "darkblue"})
+            ]),
+            html.Hr(),
+            html.P(f"{desc}"),
+        ], style={'width': '450px', 'white-space': 'normal'})
+    ]
+"""
+
+
 #******************************************************************************************
 # Run server
 #******************************************************************************************
 if __name__ == "__main__":
-    ImportHelpData('./dataset_help.csv')
+    help_df = ImportHelpData('./dataset_help.csv')
     app.run_server(debug=args.debug, port=args.port )

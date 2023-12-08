@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
+from dash                   import html
 
 static_df = None
 
@@ -43,12 +44,6 @@ def updateGraph(df,
     ymax = []
     for ic, c in enumerate(channels):
         for ig, g in enumerate(df_filt_tasks.index.get_level_values('GROUPING').unique()):
-            # building a access to the yaxis value for later evaluation
-            # Note: the time basis (xaxis is allways the same)
-            #ydata = f"df_t[{ig}].{c}"
-            #ymax.append(eval(ydata).max())
-            #legend = f"{c}_{str(g)}"
-            #fig.add_scatter(name=legend, x=df_t[ig].TIME, y=eval(ydata), line_shape='spline', line={'smoothing':smoothing_value})        
             ymax.append(configGraph(df_t[ig], fig, c, g, smoothing_value))
 
     for ic, c in enumerate(floats):
@@ -93,3 +88,40 @@ def updateGraph(df,
 
     return fig
 
+def createTooltip(df, fig, data):
+    pt = data["points"][0]
+    curves = fig["data"]
+    bbox = pt["bbox"]
+    curvID = pt["curveNumber"]
+    ts = f"{pt['x']}ms"
+    dp = f"{pt['y']}"
+
+    grouping = curves[curvID]['name'].split('|')
+    df_row = df.query(f"GROUPING=='{grouping[0]}' and DATA=='{grouping[1]}'")
+    data = f"at '{ts}' with value '{dp}'"
+    name = df_row['NAME'].iloc[0]
+    range = df_row['RANGE'].iloc[0]
+    desc = df_row['DESC'].iloc[0]
+    if len(desc) > 300:
+        desc = desc[:100] + '...'
+
+    children = [
+        html.Div([
+            html.H5(f"{name}", style={"color": "darkblue", "overflow-wrap": "break-word"}),
+            html.Hr(),
+            html.P([
+                "at ",
+                html.B(ts, style={"color": "darkblue"}),
+                " with value ",
+                html.B(dp, style={"color": "darkblue"})
+            ]),
+            html.Hr(),
+            html.P([
+                "typical range ",
+                html.B(range, style={"color": "darkblue"})
+            ]),
+            html.Hr(),
+            html.P(f"{desc}"),
+        ], style={'width': '450px', 'white-space': 'normal'})
+    ]
+    return (children, bbox)

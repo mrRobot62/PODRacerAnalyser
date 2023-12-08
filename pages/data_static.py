@@ -1,6 +1,6 @@
 # Import packages
 import dash
-from dash                   import Dash, html, dash_table, dcc, callback, Output, Input, ctx, State
+from dash                   import Dash, html, dash_table, dcc, callback, Output, Input, ctx, State, no_update
 from flask                  import Flask
 import plotly.express       as px
 import plotly.graph_objects as go
@@ -29,8 +29,14 @@ layout = html.Div(
     [
         # HEADERf
         static_header_row,
+        # ----------------------------------------------------------------------
+        # Alerts
+        # ----------------------------------------------------------------------
+        alert_success, alert_info, alert_warn, alert_error,
+        # ----------------------------------------------------------------------
+        # side canvas open for configure the graph
+        # ----------------------------------------------------------------------
         offcanvas,offcanvas2,
-
         # User input for main figure
         # ----------------------------------------------------------------------
         # upper graph   
@@ -44,11 +50,11 @@ layout = html.Div(
                     ],width=1),
         ]),
         dbc.Row([
-            dbc.Col(dcc.Graph(id="fig-static-main"))
+            dbc.Col(dcc.Graph(id="fig-static-main", clear_on_unhover=True))
             ], 
             align="center"
         ),
-
+        
         # ----------------------------------------------------------------------
         html.Hr(),
         # ----------------------------------------------------------------------
@@ -64,110 +70,24 @@ layout = html.Div(
                     ],width=1),
         ]),
         dbc.Row([
-            dbc.Col(dcc.Graph(id="fig-static-sub1"))
+            dbc.Col(dcc.Graph(id="fig-static-sub1", clear_on_unhover=True))
             ], 
             align="center"
         ),
-        
         # ----------------------------------------------------------------------
-        # Bottom-Row  
+        # Tooltips for both graphs 
         # ----------------------------------------------------------------------
+        tt_data_point, tt_data_point_sub,
     ]
 
 )
-""" 
-def _configGraph(df, fig, dataPoint, group, sv):
-    ydata = f"df.{dataPoint}"
-    vMax = max(eval(ydata))
-    legend = f"{dataPoint}_{str(group)}"
-    fig.add_scatter(name=legend, x=df.TIME, y=eval(ydata), line_shape='spline', line={'smoothing':sv})        
-    return vMax
-
-
-def _updateGraph(
-        smoothing_value, hover_mode, xaxis_type, yaxis_type, tasks, 
-        channels, floats, ldata,
-        toggle, title=""):
-    fig = None
-    ## graphs
-    df = static_df
-    df_filt_tasks = None
-    df_t = []
-
-    template = template_theme2 if toggle else template_theme1
-    fig = go.FigureWidget()
-    fig.update_layout(
-        template = template
-    )
-    
-    if len(tasks) == 0:
-        return fig
-    
-    # for every task we need a separate grouped dataset
-    for idx, t in enumerate(tasks):
-        df_t.append(df.loc[df.index.get_level_values('GROUPING') == tasks[idx]])
-        df_filt_tasks = pd.concat([df_filt_tasks, df_t[idx]],axis=0)
-
-    #
-    # build now für every task / every channel a separate scatter-plot
-    ymax = []
-    for ic, c in enumerate(channels):
-        for ig, g in enumerate(df_filt_tasks.index.get_level_values('GROUPING').unique()):
-            # building a access to the yaxis value for later evaluation
-            # Note: the time basis (xaxis is allways the same)
-            #ydata = f"df_t[{ig}].{c}"
-            #ymax.append(eval(ydata).max())
-            #legend = f"{c}_{str(g)}"
-            #fig.add_scatter(name=legend, x=df_t[ig].TIME, y=eval(ydata), line_shape='spline', line={'smoothing':smoothing_value})        
-            ymax.append(_configGraph(df_t[ig], fig, c, g, smoothing_value))
-
-    for ic, c in enumerate(floats):
-        for ig, g in enumerate(df_filt_tasks.index.get_level_values('GROUPING').unique()):
-            ymax.append(_configGraph(df_t[ig], fig, c.lower(), g, smoothing_value))
-            
-    for ic, c in enumerate(ldata):
-        for ig, g in enumerate(df_filt_tasks.index.get_level_values('GROUPING').unique()):
-            ymax.append(_configGraph(df_t[ig], fig, c.lower(), g, smoothing_value))
-            
-
-    #
-    #
-    fig.update_xaxes(title="milliseconds", type='linear' if xaxis_type == 'Linear' else 'log')
-    fig.update_yaxes(title="measurement", type='linear' if yaxis_type == 'Linear' else 'log')
-    fig.update_layout(
-        #title="Main graph",
-        #xaxis_tickformat='ms',
-        template=template,
-        xaxis=dict(
-            dtick=500,
-            rangeslider=dict(
-                visible=True
-            )
-        ),
-        yaxis=dict(
-            dtick = (sum(ymax) / len(ymax)) * 0.25             # 25% form max value
-        ),
-
-
-    )
-    if title != "":
-        fig.update_layout(
-            title=title,
-            title_x=0
-        )
-    if len(hover_mode) > 0:
-        fig.update_traces(mode="markers+lines", hovertemplate=None)
-        fig.update_layout(
-            hovermode="x unified"
-        )
-
-    return fig
-
- """
 
 @callback(
     Output(component_id='fig-static-main', component_property='figure'),
     Output(component_id='fig-static-sub1', component_property='figure'),
+    Output(component_id="alert-warn", component_property="is_open"),
+    Output(component_id="msg-alert-warn", component_property="children"),
+
     # main graph
     Input(component_id='sl-spline', component_property='value'),
     Input(component_id='chk-hover-mode', component_property='value'),
@@ -197,6 +117,8 @@ def update_static_main(
     fig = go.FigureWidget()
     fig2 = go.FigureWidget()
     fig.update_layout(template = template)
+    fig.update_traces(hoverinfo="none", hovertemplate=None)
+
     fig2.update_layout(template = template)
 
     if static_df is not None:
@@ -210,8 +132,9 @@ def update_static_main(
             toggle)
 
     else:
-        print (f"(2) No dataframe available - no file selected")
-    return fig, fig2
+        return fig, fig2, True, "{}".format("No dataframe avaiable - no file selected")
+
+    return fig, fig2, False, None
 
 
 # ----------------------------------------------------------------------
@@ -223,6 +146,10 @@ def update_static_main(
     Output(component_id='fig-static-main', component_property='figure', allow_duplicate=True),
     Output(component_id='fig-static-sub1', component_property='figure', allow_duplicate=True),
     Output(component_id='div-uploaded-file', component_property='children'),
+    Output(component_id="alert-warn", component_property="is_open", allow_duplicate=True),
+    Output(component_id="msg-alert-warn", component_property="children", allow_duplicate=True),
+    Output(component_id="alert-error", component_property="is_open", allow_duplicate=True),
+    Output(component_id="msg-alert-error", component_property="children", allow_duplicate=True),
 
     # main grapf
     Input(component_id='sl-spline', component_property='value'),
@@ -255,12 +182,11 @@ def handle_upload(
     smoothing_value, hover_mode, xaxis_type, yaxis_type, 
     tasks, channels, floats, ldata,
     xaxis2_type, yaxis2_type, tasks2, channels2, floats2, ldata2,
-
     toggle, content, fname
     ):
 
     global static_df
-
+    is_open = False
     template = template_theme2 if toggle else template_theme1
 
     fig = go.FigureWidget()
@@ -269,7 +195,7 @@ def handle_upload(
     fig2.update_layout(template = template)
 
     if fname is None:
-        return fig, fig2
+        return fig, fig2, None, True, "No dataset loaded", False, None
     
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
@@ -280,7 +206,9 @@ def handle_upload(
         # and put them into a dataframe
         data = io.StringIO(decoded.decode('utf-8'))
         static_df = loadDataset(data)
-
+    else:
+        return fig, fig2, None, False, None, True, "{}".format('only CSV files allowed')
+         
     if static_df is not None:
         fname = f"File: {fname}"
         fig = updateGraph(static_df,
@@ -292,8 +220,8 @@ def handle_upload(
             tasks2, channels2, floats2, ldata2, 
             toggle,fname)        
     else:
-        print (f"(1) No dataframe available - no file selected")
+        return fig, fig2, True, "No dataset loaded", False, None
 
-    #return fig
-    return fig, fig2, fname
+
+    return fig, fig2, fname, False, None, False, None
 

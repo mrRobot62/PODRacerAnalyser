@@ -1,4 +1,4 @@
-# PODRacer visualizer
+# PODRacer Analyzer
 
 > This python App is a part of the PODRacer Firmware and will be moved in future into a separate git repository
 
@@ -14,6 +14,8 @@ Typical telemetry data is
 - 
 
 > details descriptions please refere to `doc` subfolder
+
+
 
 ## Using Blackbox data
 Not implemented yet
