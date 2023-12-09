@@ -44,7 +44,7 @@ btn_live_config = dbc.Button(
 )
 
 btn_live_run = dbc.Button(
-    "RUN", id="btn-live-run", n_clicks=0, outline=False, color="success", disabled=True, size="lg"
+    "RUN", id="btn-live-run", n_clicks=0, outline=False, color="success", disabled=False, size="lg"
 )
 btn_live_stop = dbc.Button(
     "STOP", id="btn-live-stop", n_clicks=0, outline=False, color="warn", disabled=False, size="lg"

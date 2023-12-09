@@ -34,7 +34,7 @@ layout = html.Div(
         # ----------------------------------------------------------------------
         # Alerts
         # ----------------------------------------------------------------------
-        alert_success, alert_info, alert_warn, alert_error,
+        #alert_success, alert_info, alert_warn, alert_error,
 
         # ----------------------------------------------------------------------
         # side canvas open for configure the graph
@@ -159,37 +159,37 @@ def update_live_main(
 # ----------------------------------------------------------------------
 #   Callback for graphs (in live scenario)
 # ----------------------------------------------------------------------
-@callback(
-    #Output(component_id="fig-live-main", component_property="figure", allow_duplicate=True),        # update upper graph
-    #Output(component_id="fig-live-sub1", component_property="figure", allow_duplicate=True),        # update lower graph
-    #Output(component_id="sl-live-interval", component_property="value", allow_duplicate=True),   # set the slider value
+# @callback(
+#     Output(component_id="fig-live-main", component_property="figure", allow_duplicate=True),        # update upper graph
+#     Output(component_id="fig-live-sub1", component_property="figure", allow_duplicate=True),        # update lower graph
+#     #Output(component_id="sl-live-interval", component_property="value", allow_duplicate=True),   # set the slider value
 
-    Output(component_id="alert-warn", component_property="is_open", allow_duplicate=True),          # use alerts
-    Output(component_id="msg-alert-warn", component_property="children", allow_duplicate=True),
-    Output(component_id="alert-error", component_property="is_open", allow_duplicate=True),
-    Output(component_id="msg-alert-error", component_property="children", allow_duplicate=True),
+#     Output(component_id="alert-warn", component_property="is_open", allow_duplicate=True),          # use alerts
+#     Output(component_id="msg-alert-warn", component_property="children", allow_duplicate=True),
+#     Output(component_id="alert-error", component_property="is_open", allow_duplicate=True),
+#     Output(component_id="msg-alert-error", component_property="children", allow_duplicate=True),
 
-    Input(component_id="live-interval-component", component_property="n_intervals"),                # get interval vom dcc.Interval
-    State('memory', 'data'),                                                                        # read store
-    prevent_initial_call='initial_duplicate'
-)
-def live_stream_data(interval, memory):
+#     Input(component_id="live-interval-component", component_property="n_intervals"),                # get interval vom dcc.Interval
+#     State('memory', 'data'),                                                                        # read store
+#     prevent_initial_call='initial_duplicate'
+# )
+# def live_stream_data(interval, memory):
 
-    warnOpen = errOpen = False
-    warnMsg = errMsg = None 
-    fig = go.FigureWidget()
-    fig2 = go.FigureWidget()
-    if memory is None:
-#        return fig, fig2, warnOpen, warnMsg, errOpen, errMsg
-        return warnOpen, warnMsg, errOpen, errMsg
-    if memory['runnable']:
-        return warnOpen, warnMsg, errOpen, errMsg
-#        return fig, fig2,warnOpen, warnMsg, errOpen, errMsg
-    else:
-        warnOpen=True
-        warnMsg = f"live streaming not possible. runnable is set to '{memory['runnable']}'. Check serial port"
-    return warnOpen, warnMsg, errOpen, errMsg
-#    return fig, fig2, warnOpen, warnMsg, errOpen, errMsg
+#     warnOpen = errOpen = False
+#     warnMsg = errMsg = None 
+#     fig = go.FigureWidget()
+#     fig2 = go.FigureWidget()
+#     if memory is None:
+#         return fig, fig2, warnOpen, warnMsg, errOpen, errMsg
+# #        return warnOpen, warnMsg, errOpen, errMsg
+#     if memory['runnable']:
+# #        return warnOpen, warnMsg, errOpen, errMsg
+#         return fig, fig2,warnOpen, warnMsg, errOpen, errMsg
+#     else:
+#         warnOpen=True
+#         warnMsg = f"live streaming not possible. runnable is set to '{memory['runnable']}'. Check serial port"
+# #    return warnOpen, warnMsg, errOpen, errMsg
+#     return fig, fig2, warnOpen, warnMsg, errOpen, errMsg
    
 #------------------------------------------------------------------------------------------------------
 # call back for content of modal window
@@ -219,44 +219,44 @@ def toggle_modal(n1, ddValue, slValue, is_open):
 #------------------------------------------------------------------------------------------------------
 # callback loading-widget
 #------------------------------------------------------------------------------------------------------
-@callback(
-    Output(component_id="loading-run-out", component_property="children"),
-    Input(component_id="live-interval-component2", component_property="n_intervals"),
-    State('memory', 'data'),                                                                        # read store
-)
-def system_running(click, memory):
-    if memory is None:
-        return None
-    if memory['runnable']:
-        time.sleep(1.5)
-        return None
-    return None
+# @callback(
+#     Output(component_id="loading-run-out", component_property="children"),
+#     Input(component_id="live-interval-component2", component_property="n_intervals"),
+#     State('memory', 'data'),                                                                        # read store
+# )
+# def system_running(click, memory):
+#     if memory is None:
+#         return None
+#     if memory['runnable']:
+#         time.sleep(1.5)
+#         return None
+#     return None
 
 #------------------------------------------------------------------------------------------------------
 # callback stop button
 #------------------------------------------------------------------------------------------------------
-@callback(
-    Output(component_id="btn-live-run", component_property="disabled", allow_duplicate=True),
-    Output(component_id="live-interval-component", component_property="disabled", allow_duplicate=True),
-    Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
-    Input(component_id="btn-live-stop", component_property="n_clicks"),
-    State('memory', 'data'),
-    prevent_initial_call='initial_duplicate'                                                                        # read store
-)
-def system_running(click, memory):
-    memory['runnable'] = False
-    return False, False, False
+# @callback(
+#     Output(component_id="btn-live-run", component_property="disabled", allow_duplicate=True),
+#     Output(component_id="live-interval-component", component_property="disabled", allow_duplicate=True),
+#     Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
+#     Input(component_id="btn-live-stop", component_property="n_clicks"),
+#     State('memory', 'data'),
+#     prevent_initial_call='initial_duplicate'                                                                        # read store
+# )
+# def system_running(click, memory):
+#     memory['runnable'] = False
+#     return False, False, False
 
 #------------------------------------------------------------------------------------------------------
 # callback run button
 #------------------------------------------------------------------------------------------------------
-@callback(
-    Output(component_id="live-interval-component", component_property="disabled", allow_duplicate=True),
-    Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
-    Input(component_id="btn-live-run", component_property="n_clicks"),
-    State('memory', 'data'),    
-    prevent_initial_call='initial_duplicate'
-)
-def system_running(click, memory):
-    memory['runnable'] = True
-    return False, False
+# @callback(
+#     Output(component_id="live-interval-component", component_property="disabled", allow_duplicate=True),
+#     Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
+#     Input(component_id="btn-live-run", component_property="n_clicks"),
+#     State('memory', 'data'),    
+#     prevent_initial_call='initial_duplicate'
+# )
+# def system_running(click, memory):
+#     memory['runnable'] = True
+#     return False, False
