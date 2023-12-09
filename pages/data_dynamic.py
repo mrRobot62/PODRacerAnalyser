@@ -206,11 +206,11 @@ def update_live_main(
     [State("modal-live-config", "is_open")],        # read store
 )
 def toggle_modal(n1, ddValue, slValue, is_open):
-    data = {'interval':slValue, 'runnable': False, 'port':ddValue}
+    data = {'interval':slValue, 'runnable': False, 'port':ddValue, 'run':None}
     ports = scanSerialPorts()
     options = [{'label': i, 'value': i} for i in ports]
     disabled = True if ddValue is None else False       
-    
+    data['run'] = not disabled
     if n1:
         return not is_open, options, disabled, disabled, data
     
@@ -219,44 +219,82 @@ def toggle_modal(n1, ddValue, slValue, is_open):
 #------------------------------------------------------------------------------------------------------
 # callback loading-widget
 #------------------------------------------------------------------------------------------------------
-# @callback(
-#     Output(component_id="loading-run-out", component_property="children"),
-#     Input(component_id="live-interval-component2", component_property="n_intervals"),
-#     State('memory', 'data'),                                                                        # read store
-# )
-# def system_running(click, memory):
-#     if memory is None:
-#         return None
-#     if memory['runnable']:
-#         time.sleep(1.5)
-#         return None
-#     return None
+@callback(
+    Output(component_id="loading-run-out", component_property="children"),
+    Input(component_id="live-interval-component2", component_property="n_intervals"),
+    State('memory', 'data'),                                                                        # read store
+)
+def system_running(click, memory):
+    time.sleep(1.0)
+    return ""
 
 #------------------------------------------------------------------------------------------------------
-# callback stop button
+# callback activate/deactivate live-interval-components
 #------------------------------------------------------------------------------------------------------
-# @callback(
-#     Output(component_id="btn-live-run", component_property="disabled", allow_duplicate=True),
-#     Output(component_id="live-interval-component", component_property="disabled", allow_duplicate=True),
-#     Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
-#     Input(component_id="btn-live-stop", component_property="n_clicks"),
-#     State('memory', 'data'),
-#     prevent_initial_call='initial_duplicate'                                                                        # read store
-# )
-# def system_running(click, memory):
-#     memory['runnable'] = False
-#     return False, False, False
+@callback(
+    Output(component_id="live-interval-component", component_property="disabled", allow_duplicate=True),
+    Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
+    Input(component_id="btn-live-run", component_property="value"),
+    State('memory', 'data'),
+    prevent_initial_call='initial_duplicate'                                                                        # read store
+)
+def system_running(value, data):
+    disable = True
+    if data is not None:
+        if data['port'] is not None:
+            # Note: if button was clicked, the states are changed to STOP and run=False
+            #       that means - system can run 
+            disable = False if value == 'STOP' else True
+    return disable, disable
 
 #------------------------------------------------------------------------------------------------------
 # callback run button
 #------------------------------------------------------------------------------------------------------
-# @callback(
+@callback(
 #     Output(component_id="live-interval-component", component_property="disabled", allow_duplicate=True),
-#     Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
-#     Input(component_id="btn-live-run", component_property="n_clicks"),
-#     State('memory', 'data'),    
-#     prevent_initial_call='initial_duplicate'
-# )
-# def system_running(click, memory):
-#     memory['runnable'] = True
-#     return False, False
+    Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
+    Output(component_id="btn-live-run", component_property="children"),
+    Output(component_id="btn-live-run", component_property="value"),
+    Output(component_id="btn-live-run", component_property="style"),
+    Output("memory", "data", allow_duplicate=True),                                                   # set store
+    Input(component_id="btn-live-run", component_property="n_clicks"),
+    State('memory', 'data'),    
+    prevent_initial_call='initial_duplicate'
+)
+def run_clicked(clicks, data):
+    color = 'green'
+    if data is None:
+        # only during intial load
+        data = {}
+        data['run'] = True
+        data['port'] = None
+        data['interval'] = None
+        data['runnable'] = False
+        color = 'GREEN'
+        txt = 'RUN'
+    elif data['run']:
+        # change state of button
+        color = 'RED'
+        txt = 'STOP'
+        data['run'] = not data['run']
+    else:
+        color = 'GREEN'
+        txt = 'RUN'
+        data['run'] = not data['run']
+
+    style = {'background-color': color}
+    return (not data['run']), txt, txt, style, data
+
+    # if data is None:
+    #     data = {}
+    #     data['runnable'] = False
+    #     data['interval'] = 0
+    #     data['port'] = None
+    #     txt = "RUN"
+    # else:
+    #     txt = 'RUN' if data['runnable'] else 'STOP'
+    #     data['runnable'] = not data['runnable']
+    #     if not data['runnable']:
+    #         color = 'red'
+    # style = {'background-color':color}
+    # return txt, txt, style, data

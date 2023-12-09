@@ -46,6 +46,7 @@ btn_live_config = dbc.Button(
 btn_live_run = dbc.Button(
     "RUN", id="btn-live-run", n_clicks=0, outline=False, color="success", disabled=False, size="lg"
 )
+
 btn_live_stop = dbc.Button(
     "STOP", id="btn-live-stop", n_clicks=0, outline=False, color="warn", disabled=False, size="lg"
 )
@@ -91,8 +92,8 @@ livedata_header_row = dbc.Row(
     [
         dbc.Col(html.H2("Live data analysis", style={'color':'darkcyan'}), width=5),
         dbc.Col(btn_live_config, width=3),
-        dbc.Col(btn_live_run,width=1),
-        dbc.Col(btn_live_stop,width=1),
+        dbc.Col(btn_live_run,width=2),
+        #dbc.Col(btn_live_stop,width=1),
         #dbc.Col(load_serial_running, width=2),
         dbc.Col([dcc.Loading(id="loading-run",type="default",children=html.Div(id="loading-run-out")),load_serial_running], width=2),
     ]   
