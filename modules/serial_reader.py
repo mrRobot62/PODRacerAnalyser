@@ -14,32 +14,13 @@ from tasks import *
 
 import pandas as pd
 
-task_running = False
-
-def thread_serial_read(df, duration:float=0.1):
-    print("alive...")
-    time.sleep(duration)
-
-
-def prepare_serial_task(df, duration:float=0.1):
-    global task_running
-    if task_running == False:
-        thread = Thread(target=thread_serial_read, args=(df, duration))
-        thread.daemon = True
-        thread.start()
-        task_running = True
     
-def readSerialData(df, port, serialAktive:bool):
-
-    if serialAktive:
+def readSerialData(df, port):
+    if port is not None:
         pass
-    else:
-        return port, ""
+
+    return df
         
-    return port, "running"
-
-
-
 def scanSerialPorts():
     """ Lists serial port names
         => StackOverflow: https://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python

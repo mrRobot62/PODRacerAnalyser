@@ -106,54 +106,113 @@ layout = html.Div(
 #------------------------------------------------------------------------------------------------------
 # call back graphs (general)
 #------------------------------------------------------------------------------------------------------
-@callback(
-    Output(component_id='fig-live-main', component_property='figure'),      # update main graph
-    Output(component_id='fig-live-sub1', component_property='figure'),      # update sub graph
-    # main graph
-    Input(component_id='sl-spline', component_property='value'),            # get curve smoothness slider
-    Input(component_id='chk-hover-mode', component_property='value'),       # get checkbox
-    Input(component_id='rb-xaxis-type', component_property='value'),        # get x-axis type
-    Input(component_id='rb-yaxis-type', component_property='value'),        # get y-axis type
-    Input(component_id='dd-task-filter', component_property='value'),       # get dropdwon task
-    Input(component_id='dd-channels-filter', component_property='value'),   # get dropdown channels
-    Input(component_id='dd-float-filter', component_property='value'),      # get dropdown 
-    Input(component_id='dd-ldata-filter', component_property='value'),      # get dropdown 
+# @callback(
+#     Output(component_id='fig-live-main', component_property='figure'),      # update main graph
+#     Output(component_id='fig-live-sub1', component_property='figure'),      # update sub graph
+#     # main graph
+#     Input(component_id='sl-spline', component_property='value'),            # get curve smoothness slider
+#     Input(component_id='chk-hover-mode', component_property='value'),       # get checkbox
+#     Input(component_id='rb-xaxis-type', component_property='value'),        # get x-axis type
+#     Input(component_id='rb-yaxis-type', component_property='value'),        # get y-axis type
+#     Input(component_id='dd-task-filter', component_property='value'),       # get dropdwon task
+#     Input(component_id='dd-channels-filter', component_property='value'),   # get dropdown channels
+#     Input(component_id='dd-float-filter', component_property='value'),      # get dropdown 
+#     Input(component_id='dd-ldata-filter', component_property='value'),      # get dropdown 
 
-    # subgraph
-    Input(component_id='rb-xaxis2-type', component_property='value'),       
+#     # subgraph
+#     Input(component_id='rb-xaxis2-type', component_property='value'),       
+#     Input(component_id='rb-yaxis2-type', component_property='value'),
+#     Input(component_id='dd-task2-filter', component_property='value'),
+#     Input(component_id='dd-channels2-filter', component_property='value'),
+#     Input(component_id='dd-float2-filter', component_property='value'),
+#     Input(component_id='dd-ldata2-filter', component_property='value'),
+
+#     Input(ThemeSwitchAIO.ids.switch("theme"), "value"),                     # dark/light mode
+#     State('memory', 'data')                                                 # get store
+# )
+# def update_live_main(
+#     smoothing_value, hover_mode, xaxis_type, yaxis_type, 
+#     tasks, channels, floats, ldata, 
+#     xaxis2_type, yaxis2_type,tasks2, channels2, floats2, ldata2,
+#     toggle, memory):
+#     global live_df
+#     template = template_theme2 if toggle else template_theme1
+#     fig = go.FigureWidget()
+#     fig2 = go.FigureWidget()
+#     fig.update_layout(template = template)
+#     fig2.update_layout(template = template)
+
+#     if live_df is not None:
+#         fig = updateGraph(live_df,
+#             smoothing_value, hover_mode, xaxis_type, yaxis_type, tasks, 
+#             channels, floats, ldata, 
+#             toggle, "Live data - main")
+#         fig2 = updateGraph(live_df,
+#             smoothing_value, hover_mode, xaxis2_type, yaxis2_type, 
+#             tasks2, channels2, floats2, ldata2, 
+#             toggle, "Live data additional")  
+
+#     else:
+#         #print (f"(2) No dataframe available - no file selected")
+#         pass
+#     return fig, fig2
+
+# ----------------------------------------------------------------------
+#   Callback for graphs based on interval (reading serial)
+# ----------------------------------------------------------------------
+@callback(
+    Output(component_id="fig-live-main", component_property="figure", allow_duplicate=True),        # update upper graph
+    Output(component_id="fig-live-sub1", component_property="figure", allow_duplicate=True),        # update lower graph
+    Input(component_id="live-interval-component", component_property="n_intervals"),                # get interval vom dcc.Interval
+
+    # main graph
+    Input(component_id='sl-spline', component_property='value'),
+    Input(component_id='chk-hover-mode', component_property='value'),
+    Input(component_id='rb-xaxis-type', component_property='value'),
+    Input(component_id='rb-yaxis-type', component_property='value'),
+    Input(component_id='dd-task-filter', component_property='value'),
+    Input(component_id='dd-channels-filter', component_property='value'),
+    Input(component_id='dd-float-filter', component_property='value'),
+    Input(component_id='dd-ldata-filter', component_property='value'),
+    # subgraf
+    Input(component_id='rb-xaxis2-type', component_property='value'),
     Input(component_id='rb-yaxis2-type', component_property='value'),
     Input(component_id='dd-task2-filter', component_property='value'),
     Input(component_id='dd-channels2-filter', component_property='value'),
     Input(component_id='dd-float2-filter', component_property='value'),
     Input(component_id='dd-ldata2-filter', component_property='value'),
 
-    Input(ThemeSwitchAIO.ids.switch("theme"), "value"),                     # dark/light mode
-    State('memory', 'data')                                                 # get store
+    Input(ThemeSwitchAIO.ids.switch("theme"), "value"),
+    State('memory', 'data'),                                                                        # read store
+    prevent_initial_call='initial_duplicate',
 )
-def update_live_main(
+def update_graphs_serial(interval, 
     smoothing_value, hover_mode, xaxis_type, yaxis_type, 
     tasks, channels, floats, ldata, 
     xaxis2_type, yaxis2_type,tasks2, channels2, floats2, ldata2,
-    toggle, memory):
+    toggle, data):
+    global live_df
     template = template_theme2 if toggle else template_theme1
     fig = go.FigureWidget()
     fig2 = go.FigureWidget()
     fig.update_layout(template = template)
     fig2.update_layout(template = template)
+    fig.update_traces(hoverinfo="none", hovertemplate=None)
+    fig2.update_traces(hoverinfo="none", hovertemplate=None)
 
-    if live_df is not None:
-        fig = updateGraph(live_df,
-            smoothing_value, hover_mode, xaxis_type, yaxis_type, tasks, 
-            channels, floats, ldata, 
-            toggle, "Live data - main")
-        fig2 = updateGraph(live_df,
-            smoothing_value, hover_mode, xaxis2_type, yaxis2_type, 
-            tasks2, channels2, floats2, ldata2, 
-            toggle, "Live data additional")  
+    if data is not None:
+        if data['port'] is not None and data['runnable']:
+            live_df = readSerialData(live_df, data['port'])
+            if live_df is not None:
+                fig = updateGraph(live_df,
+                    smoothing_value, hover_mode, xaxis_type, yaxis_type, 
+                    tasks, channels, floats, ldata, 
+                    toggle)
+                fig2 = updateGraph(live_df,
+                    smoothing_value, hover_mode, xaxis2_type, yaxis2_type, 
+                    tasks2, channels2, floats2, ldata2, 
+                    toggle)
 
-    else:
-        #print (f"(2) No dataframe available - no file selected")
-        pass
     return fig, fig2
 
 # ----------------------------------------------------------------------
@@ -215,7 +274,13 @@ def toggle_modal(n1, ddValue, slValue, is_open):
         return not is_open, options, disabled, disabled, data
     
     return is_open, options, disabled, disabled, data
-    
+
+#------------------------------------------------------------------------------------------------------
+# callback interval for serial read
+#------------------------------------------------------------------------------------------------------
+
+
+
 #------------------------------------------------------------------------------------------------------
 # callback loading-widget
 #------------------------------------------------------------------------------------------------------
@@ -225,8 +290,8 @@ def toggle_modal(n1, ddValue, slValue, is_open):
     State('memory', 'data'),                                                                        # read store
 )
 def system_running(click, memory):
-    time.sleep(1.0)
-    return ""
+    time.sleep(1)
+    return None
 
 #------------------------------------------------------------------------------------------------------
 # callback activate/deactivate live-interval-components
@@ -276,10 +341,12 @@ def run_clicked(clicks, data):
         # change state of button
         color = 'RED'
         txt = 'STOP'
+        data['runnable'] = True
         data['run'] = not data['run']
     else:
         color = 'GREEN'
         txt = 'RUN'
+        data['runnable'] = False
         data['run'] = not data['run']
 
     style = {'background-color': color}
