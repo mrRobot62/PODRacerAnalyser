@@ -40,10 +40,17 @@ btn_grid_data = dbc.Button(
 )
 
 btn_live_config = dbc.Button(
-    "Live configuration", id="btn-live-config", n_clicks=0, outline=True, color="danger", disabled=False, size="lg"
+    "Live configuration", id="btn-live-config", n_clicks=0, outline=True, color="primary", disabled=False, size="lg"
 )
 
-ld_serial_running = dcc.Loading(
+btn_live_run = dbc.Button(
+    "RUN", id="btn-live-run", n_clicks=0, outline=False, color="success", disabled=True, size="lg"
+)
+btn_live_stop = dbc.Button(
+    "STOP", id="btn-live-stop", n_clicks=0, outline=False, color="warn", disabled=False, size="lg"
+)
+
+load_serial_running = dcc.Loading(
     id="ld-serial-running", type="default", children=html.Div(id="running-1")
 )
 
@@ -70,7 +77,7 @@ upload_component = dcc.Upload(
 )
 
 
-""" the complete header row. """
+""" header row for static page """
 static_header_row = dbc.Row(
     [
         dbc.Col(html.H2("Logfile analysis", style={'color':'darkcyan'}), width=6),
@@ -79,12 +86,15 @@ static_header_row = dbc.Row(
     ]
 )
 
-""" the complete header row. """
+""" header row for live-page """
 livedata_header_row = dbc.Row(
     [
-        dbc.Col(html.H2("Live data analysis", style={'color':'darkcyan'}), width=6),
-        dbc.Col(btn_live_config, width=4),
-        dbc.Col(ld_serial_running, width=2)
+        dbc.Col(html.H2("Live data analysis", style={'color':'darkcyan'}), width=5),
+        dbc.Col(btn_live_config, width=3),
+        dbc.Col(btn_live_run,width=1),
+        dbc.Col(btn_live_stop,width=1),
+        #dbc.Col(load_serial_running, width=2),
+        dbc.Col([dcc.Loading(id="loading-run",type="default",children=html.Div(id="loading-run-out")),load_serial_running], width=2),
     ]   
 )
 
@@ -137,16 +147,6 @@ modal_live_config = dbc.Modal(
         dbc.ModalHeader(dbc.ModalTitle("LIVE DATA configuration")),
         dbc.ModalBody(
             live_config_layout
-        ),
-        dbc.ModalFooter(
-            [
-                dbc.Button(
-                    "Close", id="btn-close-live", className="ms-auto", n_clicks=0
-                ),
-                dbc.Button(
-                    "Run", id="btn-run-live", color="success", className="ms-auto", n_clicks=0
-                )
-            ]    
         ),
     ],
     id="modal-live-config",

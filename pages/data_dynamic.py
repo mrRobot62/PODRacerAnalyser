@@ -74,14 +74,7 @@ layout = html.Div(
                                 target="btn-backdrop-1"),
 
                 ],
-            ),
-            dbc.Col(
-                dcc.Loading(
-                    id="loading-run",
-                    type="default",
-                    children=html.Div(id="loading-run-out")
-                )
-            ),
+            )
         ]),
         dbc.Row([
             dbc.Col(dcc.Graph(id="fig-live-main", clear_on_unhover=True))
@@ -108,6 +101,11 @@ layout = html.Div(
     ]
 
 ) 
+
+    
+#------------------------------------------------------------------------------------------------------
+# call back graphs (general)
+#------------------------------------------------------------------------------------------------------
 @callback(
     Output(component_id='fig-live-main', component_property='figure'),      # update main graph
     Output(component_id='fig-live-sub1', component_property='figure'),      # update sub graph
@@ -154,16 +152,17 @@ def update_live_main(
             toggle, "Live data additional")  
 
     else:
-        print (f"(2) No dataframe available - no file selected")
+        #print (f"(2) No dataframe available - no file selected")
+        pass
     return fig, fig2
 
 # ----------------------------------------------------------------------
-#   Callback for modal window (serial configuration)
+#   Callback for graphs (in live scenario)
 # ----------------------------------------------------------------------
 @callback(
-    Output(component_id="fig-live-main", component_property="figure", allow_duplicate=True),        # update upper graph
-    Output(component_id="fig-live-sub1", component_property="figure", allow_duplicate=True),        # update lower graph
-    Output(component_id="sl-live-interval", component_property="value", allow_duplicate=True),   # set the slider value
+    #Output(component_id="fig-live-main", component_property="figure", allow_duplicate=True),        # update upper graph
+    #Output(component_id="fig-live-sub1", component_property="figure", allow_duplicate=True),        # update lower graph
+    #Output(component_id="sl-live-interval", component_property="value", allow_duplicate=True),   # set the slider value
 
     Output(component_id="alert-warn", component_property="is_open", allow_duplicate=True),          # use alerts
     Output(component_id="msg-alert-warn", component_property="children", allow_duplicate=True),
@@ -172,7 +171,7 @@ def update_live_main(
 
     Input(component_id="live-interval-component", component_property="n_intervals"),                # get interval vom dcc.Interval
     State('memory', 'data'),                                                                        # read store
-    prevent_initial_call=True
+    prevent_initial_call='initial_duplicate'
 )
 def live_stream_data(interval, memory):
 
@@ -180,57 +179,48 @@ def live_stream_data(interval, memory):
     warnMsg = errMsg = None 
     fig = go.FigureWidget()
     fig2 = go.FigureWidget()
-    i = interval
     if memory is None:
-        return fig, fig2, i, warnOpen, warnMsg, errOpen, errMsg
+#        return fig, fig2, warnOpen, warnMsg, errOpen, errMsg
+        return warnOpen, warnMsg, errOpen, errMsg
     if memory['runnable']:
-        i = memory['interval']
-        if i <= 0:
-            i = 100
-        return fig, fig2, i, warnOpen, warnMsg, errOpen, errMsg
+        return warnOpen, warnMsg, errOpen, errMsg
+#        return fig, fig2,warnOpen, warnMsg, errOpen, errMsg
     else:
         warnOpen=True
         warnMsg = f"live streaming not possible. runnable is set to '{memory['runnable']}'. Check serial port"
-    return fig, fig2, i, warnOpen, warnMsg, errOpen, errMsg
-    
-
+    return warnOpen, warnMsg, errOpen, errMsg
+#    return fig, fig2, warnOpen, warnMsg, errOpen, errMsg
+   
+#------------------------------------------------------------------------------------------------------
+# call back for content of modal window
+#------------------------------------------------------------------------------------------------------
 @callback(
     Output("modal-live-config", "is_open"),
     Output("dd-serial-port", "options"),            # to write options (available serial prots)
-    Output("btn-run-live", "disabled"),             # enable/disable run-botton
+    Output("btn-live-run", "disabled"),             # enable/disable run-botton
     Output("live-interval-component", "disabled"),  # enable/disable interval component 
     Output("memory", "data"),                       # set store
-    Input("btn-run-live", "n_clicks"),              # get click from run-button
     Input("btn-live-config", "n_clicks"),           # get click from "open model windows" button
     Input("dd-serial-port", "value"),               # get value from dropdown serial ports
     Input("sl-live-interval", "value"),             # get value from intervall slider
     [State("modal-live-config", "is_open")],        # read store
 )
-def toggle_modal(n1, n2, ddValue, slValue, is_open):
-    data = {'interval':slValue, 'runnable': False, 'port':None}
+def toggle_modal(n1, ddValue, slValue, is_open):
+    data = {'interval':slValue, 'runnable': False, 'port':ddValue}
     ports = scanSerialPorts()
     options = [{'label': i, 'value': i} for i in ports]
     disabled = True if ddValue is None else False       
-
-    if n1 == 0 and n2 == 0:
-        return is_open, [], disabled, True, data
-
-
-    if not is_open and n2 > 0:
-        return not is_open, options, disabled, True, data
-    if n1 > 0:
-        data['port'] = ddValue
-        data['runnable'] = True
-        return not is_open, options, disabled, False, data
-
-    if ddValue is not None:          
-        data['port'] = ddValue
-        data['interval'] = slValue
-        return is_open , options, disabled, False, data
-    return is_open, [], disabled, True, data
-
+    
+    if n1:
+        return not is_open, options, disabled, disabled, data
+    
+    return is_open, options, disabled, disabled, data
+    
+#------------------------------------------------------------------------------------------------------
+# callback loading-widget
+#------------------------------------------------------------------------------------------------------
 @callback(
-    Output("loading-run-out", "children"),
+    Output(component_id="loading-run-out", component_property="children"),
     Input(component_id="live-interval-component2", component_property="n_intervals"),
     State('memory', 'data'),                                                                        # read store
 )
@@ -241,3 +231,32 @@ def system_running(click, memory):
         time.sleep(1.5)
         return None
     return None
+
+#------------------------------------------------------------------------------------------------------
+# callback stop button
+#------------------------------------------------------------------------------------------------------
+@callback(
+    Output(component_id="btn-live-run", component_property="disabled", allow_duplicate=True),
+    Output(component_id="live-interval-component", component_property="disabled", allow_duplicate=True),
+    Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
+    Input(component_id="btn-live-stop", component_property="n_clicks"),
+    State('memory', 'data'),
+    prevent_initial_call='initial_duplicate'                                                                        # read store
+)
+def system_running(click, memory):
+    memory['runnable'] = False
+    return False, False, False
+
+#------------------------------------------------------------------------------------------------------
+# callback run button
+#------------------------------------------------------------------------------------------------------
+@callback(
+    Output(component_id="live-interval-component", component_property="disabled", allow_duplicate=True),
+    Output(component_id="live-interval-component2", component_property="disabled", allow_duplicate=True),
+    Input(component_id="btn-live-run", component_property="n_clicks"),
+    State('memory', 'data'),    
+    prevent_initial_call='initial_duplicate'
+)
+def system_running(click, memory):
+    memory['runnable'] = True
+    return False, False

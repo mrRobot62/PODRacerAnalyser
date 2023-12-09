@@ -144,49 +144,6 @@ def display_hover2(hoverData, fig):
     tt, bbox = createTooltip(help_df, fig, hoverData)
     return True, bbox, tt
 
-
-
-
-"""
-
-    pt = hover_data_static_main["points"][0]
-    curves = fig["data"]
-    bbox = pt["bbox"]
-    curvID = pt["curveNumber"]
-    ts = f"{pt['x']}ms"
-    dp = f"{pt['y']}"
-
-    grouping = curves[curvID]['name'].split('|')
-    df_row = help_df.query(f"GROUPING=='{grouping[0]}' and DATA=='{grouping[1]}'")
-    data = f"at '{ts}' with value '{dp}'"
-    name = df_row['NAME'].iloc[0]
-    range = df_row['RANGE'].iloc[0]
-    desc = df_row['DESC'].iloc[0]
-    if len(desc) > 300:
-        desc = desc[:100] + '...'
-
-    children = [
-        html.Div([
-            html.H5(f"{name}", style={"color": "darkblue", "overflow-wrap": "break-word"}),
-            html.Hr(),
-            html.P([
-                "at ",
-                html.B(ts, style={"color": "darkblue"}),
-                " with value ",
-                html.B(dp, style={"color": "darkblue"})
-            ]),
-            html.Hr(),
-            html.P([
-                "typical range ",
-                html.B(range, style={"color": "darkblue"})
-            ]),
-            html.Hr(),
-            html.P(f"{desc}"),
-        ], style={'width': '450px', 'white-space': 'normal'})
-    ]
-"""
-
-
 #******************************************************************************************
 # Run server
 #******************************************************************************************
