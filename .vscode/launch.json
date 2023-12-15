@@ -24,7 +24,37 @@
                 
             ],
             "justMyCode": true
-        }
-
-    ]
+        },
+        {
+            "name": "PODR DF SerialCSV",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/serial2CSV.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--port", "/dev/cu.usbserial-0001",
+                "-vv",
+                "--baud", "115200",
+                //"--tout", "5",
+                //"--opath", "./data",
+                //"--use_ts"
+            ],
+            "justMyCode": true
+        }, 
+        {
+            "name": "PODR DF Serial2DF",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/serial2dataframe.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--port", "/dev/cu.usbserial-0001",
+                "-vv",
+                "--baud", "115200",
+                //"--tout", "5",
+                //"--opath", "./data",
+                //"--use_ts"
+            ],
+            "justMyCode": true
+        },     ]
 }

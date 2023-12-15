@@ -54,13 +54,15 @@ def streamFig(value):
     
     global df
     
-    Y = np.random.randn(1,len(cols))  
-    df2 = pd.DataFrame(Y, columns = cols)
-    df = df.append(df2, ignore_index=True)#.reset_index()
+    #Y = np.random.randn(1,len(cols))  
+    #df2 = pd.DataFrame(Y, columns = cols)
+    df2 = pd.read_csv("livedata.csv")
+    df = pd.concat([df, df2], ignore_index=True)
+    #df = df.append(df2, ignore_index=True)#.reset_index()
     #df.tail()
-    df3=df.copy()
-    df3 = df3.cumsum().tail(150)
-    #df3 = df3.tail(100).tail(200)
+    df3=df[['float0','float1','float2','long0','long1']]
+    #df3 = df3.cumsum().tail(150)
+    df3 = df3.tail(150)
     fig = df3.plot(template = 'plotly_dark')
     
     #fig.show()
@@ -77,9 +79,6 @@ def streamFig(value):
                                    font = dict(color = colors[i]))
     
     return(fig)
-
-#app.run_server(port = 8050, dev_tools_ui=True, #debug=True,
-#              dev_tools_hot_reload =True, threaded=True)
 
 
 if __name__ == "__main__":

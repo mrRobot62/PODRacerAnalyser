@@ -113,7 +113,7 @@ dd_serial_port = dcc.Dropdown(
         )
 
 sl_live_interval = dcc.Slider(
-    min=100, max=500, step=50, value=250, id="sl-live-interval"
+    min=100, max=500, step= 50, value=250, id="sl-live-interval"
 )
 
 btn_serial_test = dbc.Button(
@@ -156,6 +156,32 @@ modal_live_config = dbc.Modal(
     backdrop=False
 )
 
+modal_log_data = dbc.Modal(
+    [
+        dbc.ModalHeader(dbc.ModalTitle('Log data terminal')),
+        dbc.ModalBody(
+            html.P(children=[], id='modal-content-data'),
+        ),
+        dbc.ModalBody(
+            dbc.Button(
+                "Close",
+                id="btn-log-data-close",
+                className="ms-auto",
+                n_clicks=0,
+            )            
+        )
+    ],
+    id='modal-log-data',
+    size='lg', scrollable=True,
+    is_open=False,
+    backdrop=False
+)
+
+#------------------------------------------------------------------------------------------------------
+# ?
+#------------------------------------------------------------------------------------------------------
+
+
 message_content = html.P(
     [
         html.P(html.P([html.I(className="bi bi-x-octagon-fill me-2"), html.P(id="message-err", style={'color': 'red'})])),
@@ -165,6 +191,9 @@ message_content = html.P(
     ],
     id="message-content"
 )
+#------------------------------------------------------------------------------------------------------
+# Alerts
+#------------------------------------------------------------------------------------------------------
 
 alert_success = dbc.Alert(
     [

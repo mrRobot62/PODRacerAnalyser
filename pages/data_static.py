@@ -13,7 +13,7 @@ from modules.datasets import *
 from modules.components import *
 from pages.default_fig import default_fig
 from dash_bootstrap_templates import ThemeSwitchAIO
-from modules.serial_reader import *
+from modules.dynamic_serial_reader import *
 from modules.graph_utils import *
 
 template_theme1 = 'flatly'

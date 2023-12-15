@@ -13,7 +13,7 @@ from modules.datasets import *
 from modules.components import *
 from pages.default_fig import default_fig
 from dash_bootstrap_templates import ThemeSwitchAIO
-from modules.serial_reader import *
+from modules.dynamic_serial_reader import *
 from modules.graph_utils import *
 
 template_theme1 = "flatly"
@@ -60,7 +60,7 @@ layout = html.Div(
         # User input to configure the graphs
         # ----------------------------------------------------------------------
         modal_live_config,
-
+        modal_log_data,
         # ----------------------------------------------------------------------
         # upper graph   
         # ----------------------------------------------------------------------
@@ -74,8 +74,20 @@ layout = html.Div(
                                 target="btn-backdrop-1"),
 
                 ],
+                width=1,
+            ),
+            dbc.Col(
+                [
+                    dbc.Button(children=[html.I(className="bi bi-chat-right-text")],
+                                id="btn-open-logwindow", 
+                                outline=False, size="sm", n_clicks=0),
+                    dbc.Tooltip("open log data window", 
+                                target="btn-open-logwindow"),
+
+                ],
+                width=1,
             )
-        ]),
+        ], justify='between'),
         dbc.Row([
             dbc.Col(dcc.Graph(id="fig-live-main", clear_on_unhover=True))
             ], align="center"),
@@ -202,7 +214,7 @@ def update_graphs_serial(interval,
 
     if data is not None:
         if data['port'] is not None and data['runnable']:
-            live_df = readSerialData(live_df, data['port'])
+            live_df = readContinously(live_df).tail(150)
             if live_df is not None:
                 fig = updateGraph(live_df,
                     smoothing_value, hover_mode, xaxis_type, yaxis_type, 
