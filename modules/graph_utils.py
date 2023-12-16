@@ -19,7 +19,7 @@ def configGraph(df, fig, dataPoint, group, sv):
 def updateGraph(df,
         smoothing_value, hover_mode, xaxis_type, yaxis_type, tasks, 
         channels, floats, ldata,
-        toggle, title=""):
+        toggle, store, title=""):
     fig = None
     ## graphs
     df_filt_tasks = None
@@ -40,25 +40,37 @@ def updateGraph(df,
         df_filt_tasks = pd.concat([df_filt_tasks, df_t[idx]],axis=0)
 
     #
-    # build now für every task / every channel a separate scatter-plot
+    # build now für every task / every channel a separate scatter-plot (on y-axis) ind the same graph 
     ymax = []
+    #
+    # create data for channels
     for ic, c in enumerate(channels):
         for ig, g in enumerate(df_filt_tasks.index.get_level_values('GROUPING').unique()):
             ymax.append(configGraph(df_t[ig], fig, c, g, smoothing_value))
 
+    # create data for float data
     for ic, c in enumerate(floats):
         for ig, g in enumerate(df_filt_tasks.index.get_level_values('GROUPING').unique()):
             ymax.append(configGraph(df_t[ig], fig, c.lower(), g, smoothing_value))
-            
+
+    # create data for long data       
     for ic, c in enumerate(ldata):
         for ig, g in enumerate(df_filt_tasks.index.get_level_values('GROUPING').unique()):
             ymax.append(configGraph(df_t[ig], fig, c.lower(), g, smoothing_value))
             
 
+    xmin = df['TIME'].min()
+    xmax = df['TIME'].max()
     #
     #
-    fig.update_xaxes(title="milliseconds", type='linear' if xaxis_type == 'Linear' else 'log')
-    fig.update_yaxes(title="measurement", type='linear' if yaxis_type == 'Linear' else 'log')
+    fig.update_xaxes(spikesnap='cursor', title="milliseconds", type='linear' if xaxis_type == 'Linear' else 'log')
+    fig.update_yaxes(spikesnap='cursor', title="measurement", type='linear' if yaxis_type == 'Linear' else 'log')
+    #
+    # scaling the y-axis ticks. We assume that we want to create dynamically a dtick between 
+    # 0 and ymax. Tick-Size is 25% from ymax
+    if len(ymax) > 0:
+        dtick = (sum(ymax) / len(ymax)) * 0.25             # 25% form max value
+
     fig.update_layout(
         #title="Main graph",
         #xaxis_tickformat='ms',
@@ -69,9 +81,7 @@ def updateGraph(df,
                 visible=True
             )
         ),
-        yaxis=dict(
-            dtick = (sum(ymax) / len(ymax)) * 0.25             # 25% form max value
-        ),
+        yaxis=dict(dtick=dtick),
 
 
     )

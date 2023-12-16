@@ -456,3 +456,105 @@ tt_data_point = dcc.Tooltip(
 tt_data_point_sub = dcc.Tooltip(
     id="tt-data-point-sub"
 )
+
+#------------------------------------------------------------------------------------------------------
+# Create marker lines
+#------------------------------------------------------------------------------------------------------
+def setMarkerLine(x0, y0, x1, y1, line, color="red", width=1, dash='solid'):
+    #     marker = {'x0':x0, 'y0':y0, 'x1':x1, 'y1':y1, 'color':color, 'marker':marker, 'dir':0|1}
+    marker = {}
+    _dir = 1
+    if x0 != x1:    # horizontal line
+        y1 = y0 
+        _dir = 0
+    if y0 != y1:    # vertical line
+        x1 = x0 
+        _dir = 1
+
+    marker = {'x0':x0, 'y0':y0, 'x1':x1, 'y1':y1, 
+              'width': width, 'color':color, 'dash':dash, 
+              'line':line, 'dir': _dir}
+    return marker 
+
+def createMarkerLine(fig, marker):
+    fig.add_shape(type="line",
+        x0=marker['x0'], y0=marker['y0'], x1=marker['x1'], y1=marker['y1'],
+        line=dict(
+            color=marker['color'],
+            width=marker['width'],
+            dash=marker['dash'],
+        )
+    )
+    # create a flag
+    if marker['line'] == 'start':
+        # vertical
+        if marker['dir'] :
+            fig.add_shape(
+                type="rect",
+                x0=marker['x0'], 
+                y0=marker['y1'], 
+                x1=marker['x1']+30,
+                y1=marker['y1']-10,
+                fillcolor=marker['color'],
+                line=dict(
+                    color=marker['color'],
+                    width=marker['width'],
+                    dash=marker['dash'],
+                )
+            )
+        # horizontal
+        else:
+            fig.add_shape(
+                type="rect",
+                x0=marker['x1'], 
+                y0=marker['y0'], 
+                x1=marker['x1']-30,
+                y1=marker['y1']+10,
+                fillcolor=marker['color'],
+                line=dict(
+                    color=marker['color'],
+                    width=marker['width'],
+                    dash=marker['dash'],
+                )
+            )    
+    elif  marker['line'] == 'end':
+        if  marker['dir'] :
+            fig.add_shape(
+                type="rect",
+                x0=marker['x0'], 
+                y0=marker['y1'], 
+                x1=marker['x1']-30,
+                y1=marker['y1']-10,
+                fillcolor=marker['color'],
+                line=dict(
+                    color=marker['color'],
+                    width=marker['width'],
+                    dash=marker['dash'],
+                )
+            )    
+        else:
+            fig.add_shape(
+                type="rect",
+                x0=marker['x1'], 
+                y0=marker['y0'], 
+                x1=marker['x1']-30,
+                y1=marker['y1']-10,
+                fillcolor=marker['color'],
+                line=dict(
+                    color=marker['color'],
+                    width=marker['width'],
+                    dash=marker['dash'],
+                )
+            )      
+
+
+#------------------------------------------------------------------------------------------------------
+# Store data in memory
+#------------------------------------------------------------------------------------------------------
+static_store = dcc.Store(
+    id='static-store'
+)
+
+global_store = dcc.Store(
+    id='global-store'
+)

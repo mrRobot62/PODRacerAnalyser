@@ -27,6 +27,7 @@ static_df = None
 # Design the app
 layout = html.Div(
     [
+        static_store,
         # HEADERf
         static_header_row,
         # ----------------------------------------------------------------------
@@ -87,6 +88,7 @@ layout = html.Div(
     Output(component_id='fig-static-sub1', component_property='figure'),
     Output(component_id="alert-warn", component_property="is_open"),
     Output(component_id="msg-alert-warn", component_property="children"),
+    Output(component_id="static-store", component_property="data"),
 
     # main graph
     Input(component_id='sl-spline', component_property='value'),
@@ -106,17 +108,34 @@ layout = html.Div(
     Input(component_id='dd-ldata2-filter', component_property='value'),
 
 
-    Input(ThemeSwitchAIO.ids.switch("theme"), "value") 
+    Input(ThemeSwitchAIO.ids.switch("theme"), "value"),
+    Input('fig-static-main', 'clickData'),
+ 
+    State('static-store', 'data'),
+    State('fig-static-main', "figure"),
+
 )
 def update_static_main(
     smoothing_value, hover_mode, xaxis_type, yaxis_type, 
     tasks, channels, floats, ldata, 
     xaxis2_type, yaxis2_type,tasks2, channels2, floats2, ldata2,
-    toggle):
+    toggle, clickData, store, state_fig):
+
+    if store is None:
+        store = {
+            'marks' : {
+                'horizontal' : [],
+                'vertical' : []
+            } ,
+            'data' : None,
+            'xaxis' : {
+                'range': []
+            }
+        }
     template = template_theme2 if toggle else template_theme1
     fig = go.FigureWidget()
     fig2 = go.FigureWidget()
-    fig.update_layout(template = template)
+    fig.update_layout(template = template, hoverdistance=0)
     fig.update_traces(hoverinfo="none", hovertemplate=None)
 
     fig2.update_layout(template = template)
@@ -125,16 +144,38 @@ def update_static_main(
         fig = updateGraph(static_df,
             smoothing_value, hover_mode, xaxis_type, yaxis_type, 
             tasks, channels, floats, ldata, 
-            toggle)
+            toggle, store)
         fig2 = updateGraph(static_df,
             smoothing_value, hover_mode, xaxis2_type, yaxis2_type, 
             tasks2, channels2, floats2, ldata2, 
-            toggle)
+            toggle, store)
+        
+        fig.update_layout(xaxis_range = state_fig['layout']['xaxis']['range'])
+        store['xaxis']['range'] = state_fig['layout']['xaxis']['range']
+
 
     else:
-        return fig, fig2, True, "{}".format("No dataframe avaiable - no file selected")
+        return fig, fig2, True, "{}".format("No dataframe avaiable - no file selected"), store
 
-    return fig, fig2, False, None
+    #
+    # is true, if user clicked on the graph
+    if clickData is not None:
+        xpos = clickData['points'][0]['x']
+        ymin = int(min(state_fig['layout']['yaxis'][ 'range']))
+        ymax = int(max(state_fig['layout']['yaxis']['range']))
+
+        if  len(store['marks']['vertical']) == 0:
+            marker = setMarkerLine(xpos,ymin,xpos,ymax,line='start', color="red" )
+            store['marks']['vertical'].append(marker)
+        else:
+            marker = setMarkerLine(xpos,ymin,xpos,ymax, line='end',color="blue")
+            store['marks']['vertical'].append(marker)
+
+        for line in store['marks']['vertical']:
+            createMarkerLine(fig, line)
+        pass
+
+    return fig, fig2, False, None, store
 
 
 # ----------------------------------------------------------------------
@@ -224,4 +265,55 @@ def handle_upload(
 
 
     return fig, fig2, fname, False, None, False, None
+
+#----------------------------------------------------------------------
+# dynamically scale of x-axis ticks
+#----------------------------------------------------------------------
+@callback(
+    Output(component_id='fig-static-main', component_property='figure', allow_duplicate=True),
+    Input(component_id='fig-static-main', component_property='relayoutData'),
+    State('fig-static-main', 'figure'),
+    prevent_initial_call=True
+
+)
+def relayout_data(data, fig):
+    outputs = []
+    if fig is not None and len(fig['data']) > 0:
+        try:
+            diff = max(fig['layout']['xaxis']['range']) - \
+                    min(fig['layout']['xaxis']['range'])
+            # divede the spectrum in 5% steps
+            ticks = int( (diff / 100.0) * 5)
+            n = (-1 if ticks < 100 else -2 if ticks < 1000 else -3)
+            ticks = round(ticks, n)
+            fig['layout']['xaxis']['dtick'] = ticks
+            fig['layout']['xaxis']['autorange'] = False
+        except (KeyError, TypeError) as err:
+            fig['layout']['xaxis']['autorange'] = True
+
+    return fig
+
+#----------------------------------------------------------------------
+# Draw vertical line on mouse click position
+#----------------------------------------------------------------------
+# @callback(
+#     Output(component_id='fig-static-main', component_property='figure', allow_duplicate=True),
+#     Input('fig-static-main', 'clickData'),
+#     State('fig-static-main', 'figure'),
+#     prevent_initial_call=True
+    
+# )
+# def display_click_data(clickData, f2, fig):
+#     xpos = clickData['points'][0]['x']
+#     ymin = int(min(fig['layout']['yaxis']['range']))
+#     ymax = int(max(fig['layout']['yaxis']['range']))
+#     fig.add_shape(type="line",
+#         x0=xpos, y0=ymin, x1=xpos, y1=ymax,
+#         line=dict(
+#             color="red",
+#             width=2,
+#             dash="dashdot",
+#         )
+#     )
+#     return fig_n
 
