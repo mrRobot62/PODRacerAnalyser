@@ -485,6 +485,7 @@ def createMarkerLine(fig, marker):
             dash=marker['dash'],
         )
     )
+
     # create a flag
     if marker['line'] == 'start':
         # vertical

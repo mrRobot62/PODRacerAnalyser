@@ -109,7 +109,10 @@ layout = html.Div(
 
 
     Input(ThemeSwitchAIO.ids.switch("theme"), "value"),
+    #
+    # using for measure ms/freq
     Input('fig-static-main', 'clickData'),
+    Input('fig-static-main', 'hoverData'),
  
     State('static-store', 'data'),
     State('fig-static-main', "figure"),
@@ -119,7 +122,7 @@ def update_static_main(
     smoothing_value, hover_mode, xaxis_type, yaxis_type, 
     tasks, channels, floats, ldata, 
     xaxis2_type, yaxis2_type,tasks2, channels2, floats2, ldata2,
-    toggle, clickData, store, state_fig):
+    toggle, clickData, hoverData, store, state_fig):
 
     if store is None:
         store = {
@@ -157,6 +160,22 @@ def update_static_main(
     else:
         return fig, fig2, True, "{}".format("No dataframe avaiable - no file selected"), store
 
+    if hoverData is not None and \
+        len(store['marks']['vertical']) == 1:
+        curveId = hoverData['points']
+        xmin = store['marks']['vertical'][0]['x0']
+        xpos = hoverData['points'][0]['x']
+        ypos = int(max(state_fig['layout']['yaxis']['range'])) 
+        
+        marker = setMarkerLine(xmin,ypos,xpos,ypos,line='measure', width=3, color="green", dash="dot")
+        if len(store['marks']['horizontal']) == 0:
+            store['marks']['horizontal'].append(marker)
+        else:
+            store['marks']['horizontal'][0] = marker
+
+        createMarkerLine(fig, marker)
+        pass
+
     #
     # is true, if user clicked on the graph
     if clickData is not None:
@@ -165,16 +184,16 @@ def update_static_main(
         ymax = int(max(state_fig['layout']['yaxis']['range']))
 
         if  len(store['marks']['vertical']) == 0:
-            marker = setMarkerLine(xpos,ymin,xpos,ymax,line='start', color="red" )
+            marker = setMarkerLine(xpos,ymin,xpos,ymax, line='line', color="red" )
             store['marks']['vertical'].append(marker)
-        else:
-            marker = setMarkerLine(xpos,ymin,xpos,ymax, line='end',color="blue")
-            store['marks']['vertical'].append(marker)
+
+            #store['marks']['vertical'].append(marker)
 
         for line in store['marks']['vertical']:
             createMarkerLine(fig, line)
         pass
 
+        
     return fig, fig2, False, None, store
 
 
@@ -292,28 +311,3 @@ def relayout_data(data, fig):
             fig['layout']['xaxis']['autorange'] = True
 
     return fig
-
-#----------------------------------------------------------------------
-# Draw vertical line on mouse click position
-#----------------------------------------------------------------------
-# @callback(
-#     Output(component_id='fig-static-main', component_property='figure', allow_duplicate=True),
-#     Input('fig-static-main', 'clickData'),
-#     State('fig-static-main', 'figure'),
-#     prevent_initial_call=True
-    
-# )
-# def display_click_data(clickData, f2, fig):
-#     xpos = clickData['points'][0]['x']
-#     ymin = int(min(fig['layout']['yaxis']['range']))
-#     ymax = int(max(fig['layout']['yaxis']['range']))
-#     fig.add_shape(type="line",
-#         x0=xpos, y0=ymin, x1=xpos, y1=ymax,
-#         line=dict(
-#             color="red",
-#             width=2,
-#             dash="dashdot",
-#         )
-#     )
-#     return fig_n
-

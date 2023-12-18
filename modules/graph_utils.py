@@ -134,4 +134,7 @@ def createTooltip(df, fig, data):
             html.P(f"{desc}"),
         ], style={'width': '450px', 'white-space': 'normal'})
     ]
+    bbox['x0'] = bbox['x0'] + 10
+    bbox['x1'] = bbox['x1'] + 10
+
     return (children, bbox)
