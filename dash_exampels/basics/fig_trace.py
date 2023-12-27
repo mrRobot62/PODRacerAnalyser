@@ -58,7 +58,6 @@ fig.update_layout(
     ]
 ).update_traces(visible=True, selector=lambda t: t.customdata[0][0]==cols[0] )
 
-
 app.layout = html.Div([
     html.H1("Change graph by button"),
     dcc.Graph(id='graph', figure=fig),

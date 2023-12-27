@@ -44,7 +44,7 @@ def loadDataset(data, delimiter:str=',') -> pd.DataFrame:
     return df
 
 
-def ImportHelpData(fname:str, delimiter:str='|'):
+def ImportHelpData(fname:str='./dataset_help.csv', delimiter:str='|'):
     global help_df
     help_df = pd.read_csv(fname, delimiter=delimiter)
     return help_df

@@ -357,21 +357,13 @@ dd_longs2.id = "dd-ldata2-filter"
 
 chk_hover_mode = dcc.Checklist(
     options=[
-        {'label':'Enable HoverMode', 'value':'hovermode'}
+        {'label':'Enable HoverMode', 'value':'x unified'}
     ],
     id="chk-hover-mode",
     value=[]
 )
 chk_hover_mode2 = copy.deepcopy(chk_hover_mode)
 chk_hover_mode2.id = "chk-hover2-mode"
-
-# chk_enable_live = dcc.Checklist(
-#     options=[
-#         {'label':'Live-Mode', 'value':True}
-#     ],
-#     id="chk-live-mode",
-#     value=[]
-# )
 
 #------------------------------------------------------------------------------------------------------
 # Slider componentes
@@ -460,7 +452,7 @@ tt_data_point_sub = dcc.Tooltip(
 #------------------------------------------------------------------------------------------------------
 # Create marker lines
 #------------------------------------------------------------------------------------------------------
-def setMarkerLine(x0, y0, x1, y1, line, color="red", width=1, dash='solid'):
+def setMarkerLine(x0, y0, x1, y1, cn, pn, id, lid, line='line', color="red", width=1, dash='solid'):
     #     marker = {'x0':x0, 'y0':y0, 'x1':x1, 'y1':y1, 'color':color, 'marker':marker, 'dir':0|1}
     marker = {}
     _dir = 1
@@ -473,10 +465,15 @@ def setMarkerLine(x0, y0, x1, y1, line, color="red", width=1, dash='solid'):
 
     marker = {'x0':x0, 'y0':y0, 'x1':x1, 'y1':y1, 
               'width': width, 'color':color, 'dash':dash, 
-              'line':line, 'dir': _dir}
+              'line':line, 'dir': _dir,
+              'curveNumber': cn,
+              'pointNumber': pn,
+              'id' : id,
+              'lastID' : lid
+              }
     return marker 
 
-def createMarkerLine(fig, marker):
+def createMarkerLine(fig, marker, ):
     fig.add_shape(type="line",
         x0=marker['x0'], y0=marker['y0'], x1=marker['x1'], y1=marker['y1'],
         line=dict(
@@ -484,6 +481,32 @@ def createMarkerLine(fig, marker):
             width=marker['width'],
             dash=marker['dash'],
         )
+    )
+    txt = f"Dist: {max(marker['x0'],marker['x1']) - min(marker['x0'],marker['x1'])}ms"
+    fig.add_annotation(
+        #xref="x domain", yref="y domain",
+        x=marker['x1'], y=marker['y0'],
+        showarrow=True,
+        text=txt,
+        font=dict(
+            family="Courier New, monospace",
+            size=16,
+            color="#ffffff"
+            ),
+        align="center",
+        arrowhead=2,
+        arrowsize=1,
+        arrowwidth=2,
+        arrowcolor="#636363",
+        ax=20,
+        ay=-30,
+        bordercolor="#c7c7c7",
+        borderwidth=2,
+        borderpad=4,
+        bgcolor="#ff7f0e",
+        opacity=0.8
+
+
     )
 
     # create a flag

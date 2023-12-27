@@ -1,11 +1,30 @@
 import pandas as pd
 import plotly.graph_objects as go
 from dash                   import html
+from modules.datasets       import ImportHelpData
 
 static_df = None
 
 template_theme1 = 'flatly'
 template_theme2 = 'darkly'
+
+def createHoverData(df, hoverData):
+    """ create hover data from help - dataframe. Return hovertemplate html-string """
+    data = ''
+    # data = {
+    #     'Time   : ' : (':4d)ms',time),
+    #     'Value  : ' : value,
+    #     'Channel: ' : df.DATA,
+    #     'Name   : ' : df.NAME,
+    #     'Range  : ' : df.RANGE,
+    #     'Desc   : ' : df.DESC,
+    # }
+    for p in hoverData['points']:
+        data += '<b>Value:\t</b>' + p['y'] + '<br>'
+        data += '<b>Time:\t</b>' + p['x'] + 'ms<br>'
+        data += '<b>Data:\t</b>' + p['x'] + 'ms<br>'
+        data += '<hr>'
+    return data
 
 
 def configGraph(df, fig, dataPoint, group, sv):
@@ -21,7 +40,8 @@ def updateGraph(df,
         channels, floats, ldata,
         toggle, store, title=""):
     fig = None
-    ## graphs
+
+    ## graph
     df_filt_tasks = None
     df_t = []
 
@@ -91,11 +111,10 @@ def updateGraph(df,
             title_x=0
         )
     if len(hover_mode) > 0:
-        fig.update_traces(mode="markers+lines", hovertemplate=None)
         fig.update_layout(
-            hovermode="x unified"
+            hovermode=hover_mode[0]
         )
-
+        fig.update_traces(mode="markers+lines", hovertemplate=None)
     return fig
 
 def createTooltip(df, fig, data):
@@ -134,7 +153,7 @@ def createTooltip(df, fig, data):
             html.P(f"{desc}"),
         ], style={'width': '450px', 'white-space': 'normal'})
     ]
-    bbox['x0'] = bbox['x0'] + 10
-    bbox['x1'] = bbox['x1'] + 10
+    #bbox['x0'] = bbox['x0'] + 10
+    #bbox['x1'] = bbox['x1'] + 10
 
     return (children, bbox)

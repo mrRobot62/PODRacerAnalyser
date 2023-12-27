@@ -6,6 +6,7 @@ import plotly.express       as px
 import plotly.graph_objects as go
 import io
 import base64
+import json
 
 import argparse
 import dash_bootstrap_components as dbc
@@ -22,6 +23,7 @@ template_theme2 = 'darkly'
 dash.register_page(__name__, name="File analysis", top_nav=True)
 
 static_df = None
+help_df = None
 
 #------------------------------------------------------------------------------------------------------
 # Design the app
@@ -51,7 +53,8 @@ layout = html.Div(
                     ],width=1),
         ]),
         dbc.Row([
-            dbc.Col(dcc.Graph(id="fig-static-main", clear_on_unhover=True))
+            dbc.Col(dcc.Graph(id="fig-static-main", 
+                              clear_on_unhover=True))
             ], 
             align="center"
         ),
@@ -122,13 +125,17 @@ def update_static_main(
     smoothing_value, hover_mode, xaxis_type, yaxis_type, 
     tasks, channels, floats, ldata, 
     xaxis2_type, yaxis2_type,tasks2, channels2, floats2, ldata2,
-    toggle, clickData, hoverData, store, state_fig):
-
+    toggle, 
+    clickData, hoverData, 
+    store, state_fig):
+    clicked = ctx.triggered_id if not None else 'No clicks yet'
+    msg = None
+    help_df = None
     if store is None:
         store = {
             'marks' : {
-                'horizontal' : [],
-                'vertical' : []
+                'horizontal' : [{}],
+                'vertical' : [{},{}]
             } ,
             'data' : None,
             'xaxis' : {
@@ -138,63 +145,113 @@ def update_static_main(
     template = template_theme2 if toggle else template_theme1
     fig = go.FigureWidget()
     fig2 = go.FigureWidget()
-    fig.update_layout(template = template, hoverdistance=0)
-    fig.update_traces(hoverinfo="none", hovertemplate=None)
 
-    fig2.update_layout(template = template)
+
+    #-----------------------------------------------------
+    # update graph due to user dropbox selections
+    #-----------------------------------------------------
 
     if static_df is not None:
-        fig = updateGraph(static_df,
+        fig = updateGraph(static_df, 
             smoothing_value, hover_mode, xaxis_type, yaxis_type, 
             tasks, channels, floats, ldata, 
             toggle, store)
-        fig2 = updateGraph(static_df,
+        fig2 = updateGraph(static_df, 
             smoothing_value, hover_mode, xaxis2_type, yaxis2_type, 
             tasks2, channels2, floats2, ldata2, 
             toggle, store)
         
         fig.update_layout(xaxis_range = state_fig['layout']['xaxis']['range'])
         store['xaxis']['range'] = state_fig['layout']['xaxis']['range']
-
-
     else:
         return fig, fig2, True, "{}".format("No dataframe avaiable - no file selected"), store
 
-    if hoverData is not None and \
-        len(store['marks']['vertical']) == 1:
-        curveId = hoverData['points']
+    if hoverData is not None and hover_mode:
+        # default hover template
+        pass
+
+    if clickData is not None and hover_mode:
+        id = lastID = 0
+        xpos = clickData['points'][0]['x']
+        if not store['marks']['vertical'][0]:
+            lastX = 0
+            lastID = 0
+            id = 0
+        else:
+            lastX = store['marks']['vertical'][0]['x0']
+            id = 1
+        cn = clickData['points'][0]['curveNumber']
+        pn = clickData['points'][0]['pointNumber']
+
+        ymax = int(max(state_fig['layout']['yaxis']['range'])) 
+        ymin = 0
+        if xpos != lastX:
+            # vertical line
+            marker = setMarkerLine(
+                xpos,ymin,xpos,ymax,
+                cn, pn, id, lastID,
+                line='line', width=3, color="red", dash="solid")  
+            store['marks']['vertical'][id] = marker
+            for line in store['marks']['vertical']:
+                if line:
+                    createMarkerLine(fig, line)
+        else:
+            store['marks']['vertical'] = [{},{}]
+
+    msg1 = json.dumps( clickData,indent=2 )
+    msg2 = json.dumps( hoverData,indent=2 )
+    print ("clickData----------------")
+    print(msg1)
+    print ("hoverData++++++++++++++++")
+    print(msg2)
+    print ("************************")
+    return fig, fig2, False, None, store
+
+    #-----------------------------------------------------
+    # update graph due to markers
+    #---------------------------------------------------
+'''
+    if hoverData is not None and len(store['marks']['vertical']) == 1:
         xmin = store['marks']['vertical'][0]['x0']
         xpos = hoverData['points'][0]['x']
         ypos = int(max(state_fig['layout']['yaxis']['range'])) 
-        
-        marker = setMarkerLine(xmin,ypos,xpos,ypos,line='measure', width=3, color="green", dash="dot")
+        pn = clickData['points'][0]['pointNumber']
+        cn = clickData['points'][0]['curveNumber']
+        marker = setMarkerLine(
+            xmin,ypos,xpos,ypos,
+            cn, pn, 
+            line='measure', width=3, color="green", dash="dot")
         if len(store['marks']['horizontal']) == 0:
             store['marks']['horizontal'].append(marker)
         else:
             store['marks']['horizontal'][0] = marker
 
-        createMarkerLine(fig, marker)
-        pass
+#        createMarkerLine(fig, marker)  
 
-    #
-    # is true, if user clicked on the graph
     if clickData is not None:
         xpos = clickData['points'][0]['x']
+        pn = clickData['points'][0]['pointNumber']
+        cn = clickData['points'][0]['curveNumber']
+
         ymin = int(min(state_fig['layout']['yaxis'][ 'range']))
         ymax = int(max(state_fig['layout']['yaxis']['range']))
 
         if  len(store['marks']['vertical']) == 0:
-            marker = setMarkerLine(xpos,ymin,xpos,ymax, line='line', color="red" )
+            marker = setMarkerLine(
+                xpos,ymin,xpos,ymax, 
+                cn, pn, 
+                line='line', color="red" )
             store['marks']['vertical'].append(marker)
+#        elif len(store['marks']['vertical']) == 1:
+#            for line in store['marks']['vertical']:
+#                createMarkerLine(fig, line)
 
-            #store['marks']['vertical'].append(marker)
+    if len(store['marks']['vertical']) > 0:
+        createMarkerLine(fig, store['marks']['vertical'][0])
+    if len(store['marks']['horizontal']) > 0:
+        createMarkerLine(fig, store['marks']['horizontal'][0])
+'''
 
-        for line in store['marks']['vertical']:
-            createMarkerLine(fig, line)
-        pass
-
-        
-    return fig, fig2, False, None, store
 
 
 # ----------------------------------------------------------------------
@@ -211,7 +268,7 @@ def update_static_main(
     Output(component_id="alert-error", component_property="is_open", allow_duplicate=True),
     Output(component_id="msg-alert-error", component_property="children", allow_duplicate=True),
 
-    # main grapf
+    # main graph
     Input(component_id='sl-spline', component_property='value'),
     Input(component_id='chk-hover-mode', component_property='value'),
     Input(component_id='rb-xaxis-type', component_property='value'),
@@ -221,7 +278,7 @@ def update_static_main(
     Input(component_id='dd-float-filter', component_property='value'),
     Input(component_id='dd-ldata-filter', component_property='value'),
 
-    # subgraph
+    # sub graph
     Input(component_id='rb-xaxis2-type', component_property='value'),
     Input(component_id='rb-yaxis2-type', component_property='value'),
     Input(component_id='dd-task2-filter', component_property='value'),
@@ -271,11 +328,11 @@ def handle_upload(
          
     if static_df is not None:
         fname = f"File: {fname}"
-        fig = updateGraph(static_df,
+        fig = updateGraph(static_df, 
             smoothing_value, hover_mode, xaxis_type, yaxis_type, 
             tasks, channels, floats, ldata, 
             toggle,fname)
-        fig2 = updateGraph(static_df,
+        fig2 = updateGraph(static_df, 
             smoothing_value, hover_mode, xaxis2_type, yaxis2_type, 
             tasks2, channels2, floats2, ldata2, 
             toggle,fname)        

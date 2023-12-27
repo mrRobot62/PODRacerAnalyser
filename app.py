@@ -119,10 +119,12 @@ def toggle_offcanvas2(n1,is_open):
     Output("tt-data-point", "bbox"),
     Output("tt-data-point", "children"),
     Input("fig-static-main", "hoverData"),
-    Input("fig-static-main", "figure")
+    Input("fig-static-main", "figure"),
+    Input(component_id='chk-hover-mode', component_property='value'),
+
 )
-def display_hover1(hoverData, fig):
-    if hoverData is None:
+def display_hover1(hoverData, fig, hmode):
+    if hoverData is None or hmode:
         return False, no_update, no_update
 
     # demo only shows the first point, but other points may also be available
@@ -148,5 +150,5 @@ def display_hover2(hoverData, fig):
 # Run server
 #******************************************************************************************
 if __name__ == "__main__":
-    help_df = ImportHelpData('./dataset_help.csv')
+    help_df = ImportHelpData()
     app.run_server(debug=args.debug, port=args.port )
